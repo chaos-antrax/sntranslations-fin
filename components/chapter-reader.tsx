@@ -115,7 +115,7 @@ export function ChapterReader({
       {/* Chapter Content */}
       {/* <Card>
         <CardContent className="p-8"> */}
-      <div className="p-4">
+      <div className="p-4 px-2">
         <div className="relative">
           <TranslationToggle
             novelId={novel._id!}

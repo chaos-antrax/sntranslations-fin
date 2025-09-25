@@ -199,7 +199,7 @@ export function TranslationToggle({
   return (
     <div className="space-y-6">
       {/* Content Display */}
-      <div className="reading-content prose prose-lg max-w-none">
+      <div className="reading-content prose prose-lg text-[16px] xl:text-[18px] max-w-none">
         {showTranslation && translation ? (
           <div className="space-y-4">
             {/* <p className="text-xs text-muted-foreground mb-4">
