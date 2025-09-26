@@ -57,6 +57,7 @@ export async function scrapeNovel(url: string): Promise<Novel | null> {
     const novel: Novel = {
       ...data,
       glossary: {},
+      sourceUrl: url, // Save the source URL for future updates
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -529,5 +530,89 @@ export async function deleteChaptersBatch(
   } catch (error) {
     console.error("Error deleting chapters batch:", error);
     return false;
+  }
+}
+
+export async function updateNovelFromSource(novelId: string): Promise<{
+  success: boolean;
+  newChaptersCount: number;
+  error?: string;
+}> {
+  try {
+    const db = await getDatabase();
+    const { ObjectId } = require("mongodb");
+
+    // Get the current novel
+    const novel = await db
+      .collection("novels")
+      .findOne({ _id: new ObjectId(novelId) });
+    if (!novel || !novel.sourceUrl) {
+      return {
+        success: false,
+        newChaptersCount: 0,
+        error: "Novel not found or missing source URL",
+      };
+    }
+
+    // Scrape fresh data from the source
+    const response = await fetch(
+      `http://127.0.0.1:8000/scrape?url=${encodeURIComponent(novel.sourceUrl)}`
+    );
+    if (!response.ok) {
+      return {
+        success: false,
+        newChaptersCount: 0,
+        error: "Failed to fetch updates from source",
+      };
+    }
+
+    const freshData: NovelScrapeResponse = await response.json();
+
+    // Compare chapters - find new ones
+    const existingChapterNumbers = new Set(
+      novel.chapters.map((ch: any) => ch.chapter_number)
+    );
+    const newChapters = freshData.chapters.filter(
+      (ch) => !existingChapterNumbers.has(ch.chapter_number)
+    );
+
+    if (newChapters.length === 0) {
+      return { success: true, newChaptersCount: 0 };
+    }
+
+    // Add new chapters to the existing novel
+    const updatedChapters = [...novel.chapters, ...newChapters];
+
+    const result = await db.collection("novels").updateOne(
+      { _id: new ObjectId(novelId) },
+      {
+        $set: {
+          chapters: updatedChapters,
+          title: freshData.title, // Update title in case it changed
+          author: freshData.author, // Update author in case it changed
+          coverImg: freshData.coverImg, // Update cover in case it changed
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.modifiedCount === 1) {
+      revalidatePath(`/novel/${novelId}`);
+      revalidatePath("/");
+      return { success: true, newChaptersCount: newChapters.length };
+    }
+
+    return {
+      success: false,
+      newChaptersCount: 0,
+      error: "Failed to update database",
+    };
+  } catch (error) {
+    console.error("Error updating novel from source:", error);
+    return {
+      success: false,
+      newChaptersCount: 0,
+      error: "An unexpected error occurred",
+    };
   }
 }
