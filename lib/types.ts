@@ -32,7 +32,9 @@ export interface ChapterContentResponse {
 }
 
 export interface TranslationResponse {
+  chapter_title: string; // Added chapter title to response
   translation: string;
   new_terms: Record<string, string>;
   glossary: Record<string, string>;
+  terms_added: number; // Added count of new terms added
 }

@@ -145,12 +145,28 @@ export async function translateChapter(
     console.log("[v0] Starting translation for chapter:", chapterNumber);
     console.log("[v0] Content length:", content.length);
 
+    const novel = await getNovelById(novelId);
+    if (!novel) {
+      throw new Error("Novel not found");
+    }
+
+    const chapter = novel.chapters.find(
+      (ch) => ch.chapter_number === chapterNumber
+    );
+    if (!chapter) {
+      throw new Error("Chapter not found");
+    }
+
     const response = await fetch("http://127.0.0.1:8000/translate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: content }),
+      body: JSON.stringify({
+        text: content,
+        chapter_name: chapter.chapter_name,
+        novel_id: novelId,
+      }),
     });
 
     if (!response.ok) {
@@ -160,28 +176,21 @@ export async function translateChapter(
     const data: TranslationResponse = await response.json();
     console.log("[v0] Translation API response:", data);
     console.log("[v0] Translation text:", data.translation);
+    console.log("[v0] Translated chapter title:", data.chapter_title);
 
-    const translatedTitle = extractChapterTitle(data.translation);
-    console.log("[v0] Extracted translated title:", translatedTitle);
-
-    // Update the novel with translation and glossary
+    // Update the novel with translation, translated title, and glossary
     const db = await getDatabase();
     const { ObjectId } = require("mongodb");
 
     const updateFields: any = {
       [`chapters.${Number.parseInt(chapterNumber) - 1}.translation`]:
         data.translation,
+      [`chapters.${
+        Number.parseInt(chapterNumber) - 1
+      }.translated_chapter_title`]: data.chapter_title, // Use AI-translated title
       glossary: data.glossary,
       updatedAt: new Date(),
     };
-
-    if (translatedTitle) {
-      updateFields[
-        `chapters.${
-          Number.parseInt(chapterNumber) - 1
-        }.translated_chapter_title`
-      ] = translatedTitle;
-    }
 
     const updateResult = await db
       .collection("novels")
@@ -189,6 +198,7 @@ export async function translateChapter(
 
     console.log("[v0] Database update result:", updateResult);
     console.log("[v0] Saved translation:", data.translation);
+    console.log("[v0] New terms added:", data.terms_added);
 
     revalidatePath(`/novel/${novelId}/chapter/${chapterNumber}`);
     return data.translation;
@@ -328,12 +338,28 @@ export async function retranslateChapter(
   content: string
 ): Promise<string | null> {
   try {
+    const novel = await getNovelById(novelId);
+    if (!novel) {
+      throw new Error("Novel not found");
+    }
+
+    const chapter = novel.chapters.find(
+      (ch) => ch.chapter_number === chapterNumber
+    );
+    if (!chapter) {
+      throw new Error("Chapter not found");
+    }
+
     const response = await fetch("http://127.0.0.1:8000/translate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: content }),
+      body: JSON.stringify({
+        text: content,
+        chapter_name: chapter.chapter_name,
+        novel_id: novelId,
+      }),
     });
 
     if (!response.ok) {
@@ -342,13 +368,11 @@ export async function retranslateChapter(
 
     const data: TranslationResponse = await response.json();
 
-    const translatedTitle = extractChapterTitle(data.translation);
-
-    // Update the novel with new translation and merge glossary
+    // Update the novel with new translation, translated title, and merge glossary
     const db = await getDatabase();
     const { ObjectId } = require("mongodb");
 
-    // Get current novel to merge glossaries
+    // Get current novel to merge glossaries (though the API now handles this)
     const currentNovel = await db
       .collection("novels")
       .findOne({ _id: new ObjectId(novelId) });
@@ -357,17 +381,12 @@ export async function retranslateChapter(
     const updateFields: any = {
       [`chapters.${Number.parseInt(chapterNumber) - 1}.translation`]:
         data.translation,
+      [`chapters.${
+        Number.parseInt(chapterNumber) - 1
+      }.translated_chapter_title`]: data.chapter_title, // Use AI-translated title
       glossary: mergedGlossary,
       updatedAt: new Date(),
     };
-
-    if (translatedTitle) {
-      updateFields[
-        `chapters.${
-          Number.parseInt(chapterNumber) - 1
-        }.translated_chapter_title`
-      ] = translatedTitle;
-    }
 
     const updateResult = await db
       .collection("novels")
