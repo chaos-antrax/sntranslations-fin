@@ -5,6 +5,8 @@ import { LibraryStats } from "@/components/library-stats";
 import { AddNovelDialog } from "@/components/add-novel-dialog";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Plus } from "lucide-react";
+import logo from "@/public/logo.png";
+import Image from "next/image";
 
 export default async function HomePage() {
   const [novels, stats] = await Promise.all([
@@ -19,20 +21,21 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <BookOpen className="h-6 w-6 text-primary" />
+              <div className="rounded-lg">
+                <Image src={logo} alt="Logo" className="h-14 w-14" />
+                {/* <BookOpen className="h-6 w-6 text-primary" /> */}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  Novel Reader
+                <h1 className="text-xl xl:text-2xl font-bold text-foreground">
+                  Chaos Translations
                 </h1>
-                <p className="text-sm text-muted-foreground">
-                  Your personal Chinese novel library
+                <p className="text-xs xl:text-sm text-muted-foreground">
+                  Your Translated Novels Library
                 </p>
               </div>
             </div>
             <AddNovelDialog>
-              <Button className="gap-2">
+              <Button className="gap-2 rounded-full xl:rounded-md">
                 <Plus className="h-4 w-4" />
                 <span className="hidden xl:block">Add Novel</span>
               </Button>
@@ -76,12 +79,12 @@ export default async function HomePage() {
 
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold text-balance">
+                <h2 className="text-2xl lg:text-3xl font-bold text-balance">
                   Your Library
                 </h2>
                 <p className="text-muted-foreground mt-1">
-                  {novels.length} novel{novels.length !== 1 ? "s" : ""} in your
-                  collection
+                  {novels.length} novel{novels.length !== 1 ? "s were" : "was"}{" "}
+                  found in your collection
                 </p>
               </div>
             </div>
