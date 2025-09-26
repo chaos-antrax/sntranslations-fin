@@ -14,6 +14,7 @@ export interface Novel {
   coverImg: string;
   chapters: Chapter[];
   glossary?: Record<string, string>;
+  sourceUrl?: string; // Added source URL field for update functionality
   createdAt?: Date;
   updatedAt?: Date;
 }

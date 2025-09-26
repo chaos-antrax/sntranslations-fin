@@ -1,9 +1,11 @@
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, User, BookOpen, RefreshCw } from "lucide-react";
 import { TranslationStatus } from "@/components/translation-status";
 import { GlossaryViewer } from "@/components/glossary-viewer";
+import { UpdateNovelDialog } from "@/components/update-novel-dialog";
 import type { Novel } from "@/lib/types";
 
 interface NovelDetailsProps {
@@ -58,6 +60,23 @@ export function NovelDetails({ novel }: NovelDetailsProps) {
             <Badge variant="secondary" className="text-xs">
               Chinese Novel
             </Badge>
+          </div>
+
+          <div className="pt-4 border-t border-border">
+            <UpdateNovelDialog
+              novelId={novel._id!}
+              novelTitle={novel.title}
+              hasSourceUrl={!!novel.sourceUrl}
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full bg-transparent"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Check for Updates
+              </Button>
+            </UpdateNovelDialog>
           </div>
 
           <div className="pt-4 border-t border-border">
