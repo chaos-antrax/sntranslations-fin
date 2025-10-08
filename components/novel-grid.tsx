@@ -64,14 +64,14 @@ export function NovelGrid({ novels }: NovelGridProps) {
                   >
                     {novel.chapters.length} chapters
                   </Badge>
-                  {novel.chapters.some((ch) => ch.translation) && (
+                  {/* {novel.chapters.some((ch) => ch.translation) && (
                     <Badge
                       variant="default"
                       className="text-xs w-28 items-center justify-center flex"
                     >
                       Translated
                     </Badge>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
